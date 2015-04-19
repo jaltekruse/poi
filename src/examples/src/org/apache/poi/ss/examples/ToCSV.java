@@ -138,6 +138,8 @@ public class ToCSV {
     private DataFormatter formatter = null;
     private FormulaEvaluator evaluator = null;
     private String separator = null;
+    private File destination;
+    private File currExcelFile;
 
     private static final String CSV_FILE_EXTENSION = ".csv";
     private static final String DEFAULT_SEPARATOR = ",";
@@ -283,7 +285,7 @@ public class ToCSV {
                        throws FileNotFoundException, IOException,
                               IllegalArgumentException, InvalidFormatException {
         File source = new File(strSource);
-        File destination = new File(strDestination);
+        destination = new File(strDestination);
         File[] filesList = null;
         String destinationFilename = null;
 
@@ -346,21 +348,32 @@ public class ToCSV {
         for(File excelFile : filesList) {
             // Open the workbook
             this.openWorkbook(excelFile);
+            this.currExcelFile = excelFile;
 
             // Convert it's contents into a CSV file
             this.convertToCSV();
-
-            // Build the name of the csv folder from that of the Excel workbook.
-            // Simply replace the .xls or .xlsx file extension with .csv
-            destinationFilename = excelFile.getName();
-            destinationFilename = destinationFilename.substring(
-                    0, destinationFilename.lastIndexOf(".")) +
-                    ToCSV.CSV_FILE_EXTENSION;
-
-            // Save the CSV file away using the newly constricted file name
-            // and to the specified directory.
-            this.saveCSVFile(new File(destination, destinationFilename));
         }
+    }
+
+    /**
+     * Save the data buffered from the current sheet to a file.
+     *
+     * @param - a suffix to add to the filename, before the new extension
+     *          example usage, add the sheet name the end of the original filename
+     *          when producing one file for each sheet in a file.
+     */
+    private void saveSheet(String fileNameSuffix) throws IOException {
+        // Build the name of the csv folder from that of the Excel workbook.
+        // Simply replace the .xls or .xlsx file extension with .csv
+        String destinationFilename = currExcelFile.getName();
+        destinationFilename = destinationFilename.substring(
+          0, destinationFilename.lastIndexOf(".")) +
+          fileNameSuffix +
+          ToCSV.CSV_FILE_EXTENSION;
+
+        // Save the CSV file away using the newly constricted file name
+        // and to the specified directory.
+        this.saveCSVFile(new File(destination, destinationFilename));
     }
 
     /**
@@ -402,7 +415,7 @@ public class ToCSV {
      * Called to convert the contents of the currently opened workbook into
      * a CSV file.
      */
-    private void convertToCSV() {
+    private void convertToCSV() throws IOException {
         Sheet sheet = null;
         Row row = null;
         int lastRowNum = 0;
@@ -433,6 +446,13 @@ public class ToCSV {
                     this.rowToCSV(row);
                 }
             }
+            // TODO - generalize this or remove it before submitting a patch to upstream
+            String sheetName = this.workbook.getSheetName(i);
+            sheetName = sheetName.replace("Ó", "O");
+            sheetName = sheetName.replace("Ã", "A");
+            sheetName = sheetName.replace("ã", "a");
+            sheetName = sheetName.replace("ó", "o");
+            saveSheet("_" + sheetName);
         }
     }
 
