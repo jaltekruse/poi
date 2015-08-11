@@ -448,10 +448,10 @@ public class ToCSV {
             }
             // TODO - generalize this or remove it before submitting a patch to upstream
             String sheetName = this.workbook.getSheetName(i);
-            sheetName = sheetName.replace("Ó", "O");
-            sheetName = sheetName.replace("Ã", "A");
-            sheetName = sheetName.replace("ã", "a");
-            sheetName = sheetName.replace("ó", "o");
+            sheetName = sheetName.replace("\u00D3", "O");
+            sheetName = sheetName.replace("\u00C3", "A");
+            sheetName = sheetName.replace("\u00E3", "a");
+            sheetName = sheetName.replace("\u00F3", "o");
             saveSheet("_" + sheetName);
         }
     }
